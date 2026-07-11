@@ -673,7 +673,9 @@ function drawMangomiFrameBackground(ctx, width, height, assets) {
   ctx.restore();
 
   drawMangomiConfetti(ctx, width, height);
+}
 
+function drawMangomiOverlay(ctx, width, _height, assets) {
   drawSticker(ctx, assets.faceHappy, -8, 92, 245, 245, -0.18);
   drawSticker(ctx, assets.faceHeart, width - 250, 126, 220, 220, 0.16);
   drawSticker(ctx, assets.bodyBasic, width - 288, 1050, 285, 415, 0.1);
@@ -792,7 +794,7 @@ function drawMangomiFooter(ctx, width, footerY, assets) {
   ctx.stroke();
   ctx.restore();
 
-  drawSticker(ctx, assets.logo, width / 2 - 245, footerY + 106, 490, 190, 0, false);
+  drawSticker(ctx, assets.logo, 132, footerY + 82, 620, 240, 0, false);
 }
 
 async function renderFramePreview() {
@@ -823,6 +825,7 @@ async function renderFramePreview() {
   const footerY = firstY + 4 * (photoHeight + gap) + 20;
   drawFrameFooter(ctx, width, footerY, photoX, theme);
   if (state.frameTheme === "mangomi" && mangomiAssets) {
+    drawMangomiOverlay(ctx, width, height, mangomiAssets);
     drawMangomiFooter(ctx, width, footerY, mangomiAssets);
   }
 }
