@@ -769,7 +769,7 @@ function drawFrameFooter(ctx, width, footerY, photoX, theme) {
   ctx.textAlign = "left";
   ctx.fillStyle = theme.text;
   ctx.font = '800 45px Inter, Arial, sans-serif';
-  ctx.fillText("YERAM FOUR CUTS", photoX, footerY + 260);
+  ctx.fillText("MANGWOO FOUR CUTS", photoX, footerY + 260);
 
   const date = new Intl.DateTimeFormat("en-CA").format(new Date()).replaceAll("-", "  ·  ");
   ctx.fillStyle = theme.muted;
@@ -779,7 +779,7 @@ function drawFrameFooter(ctx, width, footerY, photoX, theme) {
   ctx.textAlign = "right";
   ctx.fillStyle = theme.accent;
   ctx.font = 'italic 700 32px Georgia, "Times New Roman", serif';
-  ctx.fillText("ViveCoded By YERAM", width - photoX, footerY + 276);
+  ctx.fillText("Mangwoo Youth Center", width - photoX, footerY + 276);
   ctx.textAlign = "left";
 }
 
@@ -794,7 +794,7 @@ function drawMangomiFooter(ctx, width, footerY, assets) {
   ctx.stroke();
   ctx.restore();
 
-  drawSticker(ctx, assets.logo, 132, footerY + 82, 620, 240, 0, false);
+  drawSticker(ctx, assets.logo, 28, footerY + 18, 1040, 405, 0, false);
 }
 
 async function renderFramePreview() {
