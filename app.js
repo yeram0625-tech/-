@@ -5,6 +5,7 @@ const state = {
   selectedIds: [],
   isCountingDown: false,
   beautyFilter: "bright",
+  frameTheme: "black",
 };
 
 const BEAUTY_FILTERS = {
@@ -35,6 +36,70 @@ const BEAUTY_FILTERS = {
   },
 };
 
+const FRAME_THEMES = {
+  black: {
+    label: "블랙",
+    background: "#050505",
+    slot: "#181818",
+    text: "#ffffff",
+    muted: "#d7d7d7",
+    line: "#ffffff",
+    accent: "#ffffff",
+    photoBorder: "#ffffff",
+  },
+  white: {
+    label: "화이트",
+    background: "#fffdf8",
+    slot: "#f3f3ef",
+    text: "#111111",
+    muted: "#555555",
+    line: "#171717",
+    accent: "#171717",
+    photoBorder: "#171717",
+  },
+  heart: {
+    label: "하트",
+    background: "#fffdfd",
+    slot: "#f0f0ee",
+    text: "#171717",
+    muted: "#666666",
+    line: "#ece7e9",
+    accent: "#7a68ff",
+    photoBorder: "#ffffff",
+  },
+  film: {
+    label: "필름지",
+    background: "#111111",
+    slot: "#242424",
+    text: "#ffffff",
+    muted: "#d1d1d1",
+    line: "#f6f6f6",
+    accent: "#ffd34d",
+    photoBorder: "#f8f8f8",
+  },
+  cute: {
+    label: "뽀짝",
+    background: "#fff6fb",
+    slot: "#fff0f6",
+    text: "#3f2b3d",
+    muted: "#8b6f82",
+    line: "#ffd4e4",
+    accent: "#ff6b9a",
+    photoBorder: "#ffffff",
+  },
+  mangomi: {
+    label: "망고미",
+    background: "#fffaf0",
+    slot: "#fff7e4",
+    text: "#2c2415",
+    muted: "#8a6b35",
+    line: "#ff9f00",
+    accent: "#ff9f00",
+    photoBorder: "#ff9f00",
+    asset: "assets/mangomi-frame.png",
+  },
+};
+
 const $ = (selector) => document.querySelector(selector);
 const intro = $("#intro");
 const booth = $("#booth");
@@ -53,7 +118,9 @@ const captureButton = $("#captureButton");
 const switchButton = $("#switchButton");
 const fileInput = $("#fileInput");
 const toast = $("#toast");
+const frameButtons = [...document.querySelectorAll("[data-frame]")];
 const beautyButtons = [...document.querySelectorAll("[data-filter]")];
+let mangomiFramePromise = null;
 
 $("#sampleDate").textContent = new Intl.DateTimeFormat("ko-KR", {
   year: "numeric",
@@ -230,6 +297,17 @@ function setBeautyFilter(filterId) {
   showToast(`${BEAUTY_FILTERS[filterId].label} 보정을 적용했어요`);
 }
 
+function setFrameTheme(frameId) {
+  if (!FRAME_THEMES[frameId]) return;
+  state.frameTheme = frameId;
+  frameButtons.forEach((button) => {
+    const isActive = button.dataset.frame === frameId;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+  showToast(`${FRAME_THEMES[frameId].label} 프레임을 선택했어요`);
+}
+
 function deleteSelected() {
   const selected = new Set(state.selectedIds);
   state.photos = state.photos.filter((photo) => !selected.has(photo.id));
@@ -267,6 +345,13 @@ function loadImage(src) {
   });
 }
 
+function loadMangomiFrame() {
+  if (!mangomiFramePromise) {
+    mangomiFramePromise = loadImage(FRAME_THEMES.mangomi.asset);
+  }
+  return mangomiFramePromise;
+}
+
 function drawCover(ctx, image, x, y, width, height) {
   const sourceRatio = image.width / image.height;
   const targetRatio = width / height;
@@ -286,15 +371,38 @@ function drawCover(ctx, image, x, y, width, height) {
   ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
 }
 
-function drawFilteredCover(ctx, image, x, y, width, height) {
+function roundedRectPath(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function drawFilteredCover(ctx, image, x, y, width, height, radius = 0) {
   const beauty = BEAUTY_FILTERS[state.beautyFilter] || BEAUTY_FILTERS.original;
   ctx.save();
+  if (radius > 0) {
+    roundedRectPath(ctx, x, y, width, height, radius);
+    ctx.clip();
+  }
   ctx.filter = beauty.canvas;
   drawCover(ctx, image, x, y, width, height);
   ctx.restore();
 
   if (state.beautyFilter === "soft") {
     ctx.save();
+    if (radius > 0) {
+      roundedRectPath(ctx, x, y, width, height, radius);
+      ctx.clip();
+    }
     ctx.globalCompositeOperation = "screen";
     ctx.globalAlpha = 0.18;
     ctx.fillStyle = "#ffe7ef";
@@ -304,6 +412,10 @@ function drawFilteredCover(ctx, image, x, y, width, height) {
 
   if (state.beautyFilter === "warm") {
     ctx.save();
+    if (radius > 0) {
+      roundedRectPath(ctx, x, y, width, height, radius);
+      ctx.clip();
+    }
     ctx.globalCompositeOperation = "soft-light";
     ctx.globalAlpha = 0.28;
     ctx.fillStyle = "#ffd6a8";
@@ -348,6 +460,169 @@ function drawHeartBorder(ctx, width, height) {
   }
 }
 
+function drawStar(ctx, x, y, radius, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.beginPath();
+  for (let i = 0; i < 10; i += 1) {
+    const angle = -Math.PI / 2 + (i * Math.PI) / 5;
+    const r = i % 2 === 0 ? radius : radius * 0.42;
+    const px = Math.cos(angle) * r;
+    const py = Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawFilmDecor(ctx, width, height) {
+  ctx.save();
+  ctx.fillStyle = "#f6f6f6";
+  const holeWidth = 46;
+  const holeHeight = 34;
+  for (let y = 80; y < height - 80; y += 118) {
+    roundedRectPath(ctx, 28, y, holeWidth, holeHeight, 9);
+    ctx.fill();
+    roundedRectPath(ctx, width - 74, y, holeWidth, holeHeight, 9);
+    ctx.fill();
+  }
+  ctx.strokeStyle = "rgba(255,255,255,.55)";
+  ctx.lineWidth = 4;
+  ctx.setLineDash([26, 22]);
+  ctx.beginPath();
+  ctx.moveTo(94, 66);
+  ctx.lineTo(94, height - 66);
+  ctx.moveTo(width - 94, 66);
+  ctx.lineTo(width - 94, height - 66);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCuteDecor(ctx, width, height) {
+  const colors = ["#ff6b9a", "#7a68ff", "#ffd34d", "#66d69e", "#ff9f73"];
+  for (let i = 0; i < 34; i += 1) {
+    const side = i % 2 === 0 ? 54 : width - 54;
+    const y = 90 + i * 98;
+    drawStar(ctx, side + (i % 3 - 1) * 12, y, 13 + (i % 3) * 3, colors[i % colors.length]);
+  }
+
+  ctx.save();
+  ctx.globalAlpha = 0.22;
+  for (let i = 0; i < 9; i += 1) {
+    ctx.beginPath();
+    ctx.arc(120 + (i % 3) * 480, 170 + i * 360, 42, 0, Math.PI * 2);
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function getFrameLayout(frameId, width) {
+  if (frameId === "mangomi") {
+    return {
+      photoX: 120,
+      photoWidth: width - 240,
+      photoHeight: 670,
+      gap: 50,
+      firstY: 250,
+      radius: 22,
+    };
+  }
+
+  return {
+    photoX: 108,
+    photoWidth: width - 216,
+    photoHeight: 690,
+    gap: 30,
+    firstY: 92,
+    radius: frameId === "black" || frameId === "film" ? 4 : 18,
+  };
+}
+
+function drawFrameBackground(ctx, width, height, theme, mangomiImage) {
+  if (state.frameTheme === "mangomi" && mangomiImage) {
+    drawCover(ctx, mangomiImage, 0, 0, width, height);
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = "#fff7df";
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+    return;
+  }
+
+  ctx.fillStyle = theme.background;
+  ctx.fillRect(0, 0, width, height);
+
+  if (state.frameTheme === "heart") {
+    drawHeartBorder(ctx, width, height);
+  }
+
+  if (state.frameTheme === "film") {
+    drawFilmDecor(ctx, width, height);
+  }
+
+  if (state.frameTheme === "cute") {
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, "#fff6fb");
+    gradient.addColorStop(0.48, "#fffdf3");
+    gradient.addColorStop(1, "#f3f0ff");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+    drawCuteDecor(ctx, width, height);
+    drawHeartBorder(ctx, width, height);
+  }
+}
+
+function drawSlotFrame(ctx, x, y, width, height, radius, theme) {
+  ctx.save();
+  roundedRectPath(ctx, x, y, width, height, radius);
+  ctx.fillStyle = theme.slot;
+  ctx.fill();
+  ctx.lineWidth = state.frameTheme === "black" || state.frameTheme === "film" ? 5 : 3;
+  ctx.strokeStyle = theme.photoBorder;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawFrameFooter(ctx, width, footerY, photoX, theme) {
+  ctx.textAlign = "center";
+  ctx.fillStyle = theme.text;
+  ctx.font = '800 60px Inter, "Malgun Gothic", Arial, sans-serif';
+  ctx.fillText("나를 찾다, 미래를 열다!", width / 2, footerY + 82);
+
+  ctx.fillStyle = theme.muted;
+  ctx.font = '600 28px Inter, "Malgun Gothic", Arial, sans-serif';
+  ctx.fillText("2026서울진로직업박람회 X 망우청소년센터", width / 2, footerY + 140);
+
+  ctx.strokeStyle = theme.line;
+  ctx.globalAlpha = state.frameTheme === "black" || state.frameTheme === "film" ? 0.7 : 1;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(photoX, footerY + 190);
+  ctx.lineTo(width - photoX, footerY + 190);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = theme.text;
+  ctx.font = '800 45px Inter, Arial, sans-serif';
+  ctx.fillText("YERAM FOUR CUTS", photoX, footerY + 260);
+
+  const date = new Intl.DateTimeFormat("en-CA").format(new Date()).replaceAll("-", "  ·  ");
+  ctx.fillStyle = theme.muted;
+  ctx.font = '500 24px Inter, Arial, sans-serif';
+  ctx.fillText(date, photoX, footerY + 306);
+
+  ctx.textAlign = "right";
+  ctx.fillStyle = theme.accent;
+  ctx.font = 'italic 700 32px Georgia, "Times New Roman", serif';
+  ctx.fillText("ViveCoded By YERAM", width - photoX, footerY + 276);
+  ctx.textAlign = "left";
+}
+
 async function composeStrip() {
   if (state.selectedIds.length !== 4) return;
 
@@ -359,58 +634,24 @@ async function composeStrip() {
     state.photos.find((photo) => photo.id === id),
   );
   const images = await Promise.all(selectedPhotos.map((photo) => loadImage(photo.src)));
+  const mangomiImage = state.frameTheme === "mangomi" ? await loadMangomiFrame() : null;
   const ctx = resultCanvas.getContext("2d");
   const width = resultCanvas.width;
   const height = resultCanvas.height;
-  const photoX = 108;
-  const photoWidth = width - photoX * 2;
-  const photoHeight = 690;
-  const gap = 30;
-  const firstY = 92;
+  const theme = FRAME_THEMES[state.frameTheme] || FRAME_THEMES.black;
+  const { photoX, photoWidth, photoHeight, gap, firstY, radius } = getFrameLayout(state.frameTheme, width);
 
-  ctx.fillStyle = "#fffdfd";
-  ctx.fillRect(0, 0, width, height);
-  drawHeartBorder(ctx, width, height);
+  ctx.clearRect(0, 0, width, height);
+  drawFrameBackground(ctx, width, height, theme, mangomiImage);
 
   images.forEach((image, index) => {
     const y = firstY + index * (photoHeight + gap);
-    ctx.fillStyle = "#f0f0ee";
-    ctx.fillRect(photoX, y, photoWidth, photoHeight);
-    drawFilteredCover(ctx, image, photoX, y, photoWidth, photoHeight);
+    drawSlotFrame(ctx, photoX, y, photoWidth, photoHeight, radius, theme);
+    drawFilteredCover(ctx, image, photoX, y, photoWidth, photoHeight, radius);
   });
 
   const footerY = firstY + 4 * (photoHeight + gap) + 20;
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#171717";
-  ctx.font = '800 60px Inter, "Malgun Gothic", Arial, sans-serif';
-  ctx.fillText("나를 찾다, 미래를 열다!", width / 2, footerY + 82);
-
-  ctx.fillStyle = "#666666";
-  ctx.font = '600 28px Inter, "Malgun Gothic", Arial, sans-serif';
-  ctx.fillText("2026서울진로직업박람회 X 망우청소년센터", width / 2, footerY + 140);
-
-  ctx.strokeStyle = "#ece7e9";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(photoX, footerY + 190);
-  ctx.lineTo(width - photoX, footerY + 190);
-  ctx.stroke();
-
-  ctx.textAlign = "left";
-  ctx.fillStyle = "#171717";
-  ctx.font = '800 45px Inter, Arial, sans-serif';
-  ctx.fillText("YERAM FOUR CUTS", photoX, footerY + 260);
-
-  const date = new Intl.DateTimeFormat("en-CA").format(new Date()).replaceAll("-", "  ·  ");
-  ctx.fillStyle = "#777777";
-  ctx.font = '500 24px Inter, Arial, sans-serif';
-  ctx.fillText(date, photoX, footerY + 306);
-
-  ctx.textAlign = "right";
-  ctx.fillStyle = "#7a68ff";
-  ctx.font = 'italic 700 32px Georgia, "Times New Roman", serif';
-  ctx.fillText("ViveCoded By YERAM", width - photoX, footerY + 276);
-  ctx.textAlign = "left";
+  drawFrameFooter(ctx, width, footerY, photoX, theme);
 
   composeButton.innerHTML = originalLabel;
   composeButton.disabled = false;
@@ -455,6 +696,10 @@ switchButton.addEventListener("click", switchCamera);
 fileInput.addEventListener("change", (event) => addFiles(event.target.files));
 deleteButton.addEventListener("click", deleteSelected);
 composeButton.addEventListener("click", composeStrip);
+frameButtons.forEach((button) => {
+  button.addEventListener("click", () => setFrameTheme(button.dataset.frame));
+  button.setAttribute("aria-pressed", String(button.dataset.frame === state.frameTheme));
+});
 beautyButtons.forEach((button) => {
   button.addEventListener("click", () => setBeautyFilter(button.dataset.filter));
   button.setAttribute("aria-pressed", String(button.dataset.filter === state.beautyFilter));
