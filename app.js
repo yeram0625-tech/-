@@ -15,23 +15,23 @@ const BEAUTY_FILTERS = {
   },
   bright: {
     label: "화사하게",
-    css: "brightness(1.09) contrast(1.04) saturate(1.08)",
-    canvas: "brightness(1.09) contrast(1.04) saturate(1.08)",
+    css: "brightness(1.24) contrast(1.08) saturate(1.22)",
+    canvas: "brightness(1.24) contrast(1.08) saturate(1.22)",
   },
   soft: {
     label: "뽀샤시",
-    css: "brightness(1.13) contrast(.96) saturate(1.04)",
-    canvas: "brightness(1.13) contrast(.96) saturate(1.04) blur(.35px)",
+    css: "brightness(1.28) contrast(.88) saturate(1.14)",
+    canvas: "brightness(1.28) contrast(.88) saturate(1.14) blur(.85px)",
   },
   clear: {
     label: "선명하게",
-    css: "brightness(1.04) contrast(1.15) saturate(1.12)",
-    canvas: "brightness(1.04) contrast(1.15) saturate(1.12)",
+    css: "brightness(1.08) contrast(1.34) saturate(1.32)",
+    canvas: "brightness(1.08) contrast(1.34) saturate(1.32)",
   },
   warm: {
     label: "필름톤",
-    css: "brightness(1.06) contrast(1.03) saturate(1.12) sepia(.16)",
-    canvas: "brightness(1.06) contrast(1.03) saturate(1.12) sepia(.16)",
+    css: "brightness(1.14) contrast(1.1) saturate(1.28) sepia(.34)",
+    canvas: "brightness(1.14) contrast(1.1) saturate(1.28) sepia(.34)",
   },
 };
 
@@ -296,7 +296,7 @@ function drawFilteredCover(ctx, image, x, y, width, height) {
   if (state.beautyFilter === "soft") {
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.globalAlpha = 0.08;
+    ctx.globalAlpha = 0.18;
     ctx.fillStyle = "#ffe7ef";
     ctx.fillRect(x, y, width, height);
     ctx.restore();
@@ -305,7 +305,7 @@ function drawFilteredCover(ctx, image, x, y, width, height) {
   if (state.beautyFilter === "warm") {
     ctx.save();
     ctx.globalCompositeOperation = "soft-light";
-    ctx.globalAlpha = 0.14;
+    ctx.globalAlpha = 0.28;
     ctx.fillStyle = "#ffd6a8";
     ctx.fillRect(x, y, width, height);
     ctx.restore();
