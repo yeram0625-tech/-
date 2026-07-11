@@ -852,19 +852,24 @@ async function composeStrip() {
 }
 
 function saveImage() {
+  const borderX = 48;
+  const borderY = 72;
+  const theme = FRAME_THEMES[state.frameTheme] || FRAME_THEMES.black;
   const exportCanvas = document.createElement("canvas");
-  exportCanvas.width = resultCanvas.width * 2;
-  exportCanvas.height = resultCanvas.height;
+  exportCanvas.width = resultCanvas.width * 2 + borderX * 2;
+  exportCanvas.height = resultCanvas.height + borderY * 2;
   const exportContext = exportCanvas.getContext("2d");
-  exportContext.drawImage(resultCanvas, 0, 0);
-  exportContext.drawImage(resultCanvas, resultCanvas.width, 0);
+  exportContext.fillStyle = theme.background;
+  exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+  exportContext.drawImage(resultCanvas, borderX, borderY);
+  exportContext.drawImage(resultCanvas, borderX + resultCanvas.width, borderY);
 
   const link = document.createElement("a");
   const date = new Intl.DateTimeFormat("en-CA").format(new Date());
   link.download = `fourly-double-strip-${date}.png`;
   link.href = exportCanvas.toDataURL("image/png");
   link.click();
-  showToast("네컷 프레임 두 장을 나란히 저장했어요");
+  showToast("테두리를 포함한 네컷 두 장을 저장했어요");
 }
 
 async function switchCamera() {
