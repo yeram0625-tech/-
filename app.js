@@ -688,9 +688,9 @@ function getFrameLayout(frameId, width) {
     return {
       photoX: 165,
       photoWidth: width - 330,
-      photoHeight: 640,
-      gap: 45,
-      firstY: 255,
+      photoHeight: 670,
+      gap: 34,
+      firstY: 228,
       radius: 24,
     };
   }
@@ -698,9 +698,9 @@ function getFrameLayout(frameId, width) {
   return {
     photoX: 108,
     photoWidth: width - 216,
-    photoHeight: 690,
-    gap: 30,
-    firstY: 92,
+    photoHeight: 715,
+    gap: 26,
+    firstY: 86,
     radius: frameId === "black" || frameId === "film" ? 4 : 18,
   };
 }
@@ -750,36 +750,36 @@ function drawFrameFooter(ctx, width, footerY, photoX, theme) {
 
   ctx.textAlign = "center";
   ctx.fillStyle = theme.text;
-  ctx.font = '800 60px Inter, "Malgun Gothic", Arial, sans-serif';
-  ctx.fillText("나를 찾다, 미래를 열다!", width / 2, footerY + 82);
+  ctx.font = '800 66px Inter, "Malgun Gothic", Arial, sans-serif';
+  ctx.fillText("나를 찾다, 미래를 열다!", width / 2, footerY + 54);
 
   ctx.fillStyle = theme.muted;
-  ctx.font = '600 28px Inter, "Malgun Gothic", Arial, sans-serif';
-  ctx.fillText("2026서울진로직업박람회 X 망우청소년센터", width / 2, footerY + 140);
+  ctx.font = '600 30px Inter, "Malgun Gothic", Arial, sans-serif';
+  ctx.fillText("2026서울진로직업박람회 X 망우청소년센터", width / 2, footerY + 110);
 
   ctx.strokeStyle = theme.line;
   ctx.globalAlpha = state.frameTheme === "black" || state.frameTheme === "film" ? 0.7 : 1;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(photoX, footerY + 190);
-  ctx.lineTo(width - photoX, footerY + 190);
+  ctx.moveTo(photoX, footerY + 154);
+  ctx.lineTo(width - photoX, footerY + 154);
   ctx.stroke();
   ctx.globalAlpha = 1;
 
   ctx.textAlign = "left";
   ctx.fillStyle = theme.text;
-  ctx.font = '800 45px Inter, Arial, sans-serif';
-  ctx.fillText("MANGWOO FOUR CUTS", photoX, footerY + 260);
+  ctx.font = '800 48px Inter, Arial, sans-serif';
+  ctx.fillText("MANGWOO FOUR CUTS", photoX, footerY + 226);
 
   const date = new Intl.DateTimeFormat("en-CA").format(new Date()).replaceAll("-", "  ·  ");
   ctx.fillStyle = theme.muted;
-  ctx.font = '500 24px Inter, Arial, sans-serif';
-  ctx.fillText(date, photoX, footerY + 306);
+  ctx.font = '500 26px Inter, Arial, sans-serif';
+  ctx.fillText(date, photoX, footerY + 286);
 
   ctx.textAlign = "right";
   ctx.fillStyle = theme.accent;
-  ctx.font = 'italic 700 32px Georgia, "Times New Roman", serif';
-  ctx.fillText("Mangwoo Youth Center", width - photoX, footerY + 276);
+  ctx.font = 'italic 700 34px Georgia, "Times New Roman", serif';
+  ctx.fillText("Mangwoo Youth Center", width - photoX, footerY + 242);
   ctx.textAlign = "left";
 }
 
@@ -789,12 +789,12 @@ function drawMangomiFooter(ctx, width, footerY, assets) {
   ctx.strokeStyle = "rgba(255,159,0,.34)";
   ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.moveTo(180, footerY + 60);
-  ctx.lineTo(width - 180, footerY + 60);
+  ctx.moveTo(160, footerY + 34);
+  ctx.lineTo(width - 160, footerY + 34);
   ctx.stroke();
   ctx.restore();
 
-  drawSticker(ctx, assets.logo, 28, footerY + 18, 1040, 405, 0, false);
+  drawSticker(ctx, assets.logo, 12, footerY + 42, 1080, 420, 0, false);
 }
 
 async function renderFramePreview() {
