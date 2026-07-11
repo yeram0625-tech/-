@@ -852,8 +852,8 @@ async function composeStrip() {
 }
 
 function saveImage() {
-  const borderX = 48;
-  const borderY = 72;
+  const borderX = 96;
+  const borderY = 144;
   const theme = FRAME_THEMES[state.frameTheme] || FRAME_THEMES.black;
   const exportCanvas = document.createElement("canvas");
   exportCanvas.width = resultCanvas.width * 2 + borderX * 2;
