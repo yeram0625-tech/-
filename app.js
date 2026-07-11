@@ -220,7 +220,7 @@ async function runCountdown() {
   renderPhotos();
 
   for (let shot = 1; shot <= 8; shot += 1) {
-    for (const number of [3, 2, 1]) {
+    for (const number of [5, 4, 3, 2, 1]) {
       countdown.innerHTML = `<small>${shot} / 8</small>${number}`;
       await wait(950);
     }
