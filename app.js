@@ -97,8 +97,17 @@ const FRAME_THEMES = {
     line: "#ff9f00",
     accent: "#ff9f00",
     photoBorder: "#ff9f00",
-    asset: "assets/mangomi-frame.png",
   },
+};
+
+const MANGOMI_ASSETS = {
+  faceHeart: "assets/mangomi/face-heart.png",
+  faceBasic: "assets/mangomi/face-basic.png",
+  faceWink: "assets/mangomi/face-wink.png",
+  faceHappy: "assets/mangomi/face-happy.png",
+  bodyParty: "assets/mangomi/body-party.png",
+  bodyBasic: "assets/mangomi/body-basic.png",
+  logo: "assets/mangomi/mangwoo-logo.png",
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -122,7 +131,7 @@ const fileInput = $("#fileInput");
 const toast = $("#toast");
 const frameButtons = [...document.querySelectorAll("[data-frame]")];
 const beautyButtons = [...document.querySelectorAll("[data-filter]")];
-let mangomiFramePromise = null;
+let mangomiAssetsPromise = null;
 
 $("#sampleDate").textContent = new Intl.DateTimeFormat("ko-KR", {
   year: "numeric",
@@ -374,11 +383,13 @@ function loadImage(src) {
   });
 }
 
-function loadMangomiFrame() {
-  if (!mangomiFramePromise) {
-    mangomiFramePromise = loadImage(FRAME_THEMES.mangomi.asset);
+function loadMangomiAssets() {
+  if (!mangomiAssetsPromise) {
+    mangomiAssetsPromise = Promise.all(
+      Object.entries(MANGOMI_ASSETS).map(async ([key, src]) => [key, await loadImage(src)]),
+    ).then((entries) => Object.fromEntries(entries));
   }
-  return mangomiFramePromise;
+  return mangomiAssetsPromise;
 }
 
 function drawCover(ctx, image, x, y, width, height) {
@@ -398,6 +409,53 @@ function drawCover(ctx, image, x, y, width, height) {
   }
 
   ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
+}
+
+function drawContain(ctx, image, x, y, width, height) {
+  const sourceRatio = image.width / image.height;
+  const targetRatio = width / height;
+  let drawWidth = width;
+  let drawHeight = height;
+  let drawX = x;
+  let drawY = y;
+
+  if (sourceRatio > targetRatio) {
+    drawHeight = width / sourceRatio;
+    drawY = y + (height - drawHeight) / 2;
+  } else {
+    drawWidth = height * sourceRatio;
+    drawX = x + (width - drawWidth) / 2;
+  }
+
+  ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+}
+
+function drawSticker(ctx, image, x, y, width, height, rotation = 0, shadow = true) {
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = image.width;
+  tempCanvas.height = image.height;
+  const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
+  tempCtx.drawImage(image, 0, 0);
+  const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+  const pixels = imageData.data;
+
+  for (let i = 0; i < pixels.length; i += 4) {
+    if (pixels[i] > 246 && pixels[i + 1] > 246 && pixels[i + 2] > 246) {
+      pixels[i + 3] = 0;
+    }
+  }
+  tempCtx.putImageData(imageData, 0, 0);
+
+  ctx.save();
+  ctx.translate(x + width / 2, y + height / 2);
+  ctx.rotate(rotation);
+  if (shadow) {
+    ctx.shadowColor = "rgba(107, 72, 19, .18)";
+    ctx.shadowBlur = 22;
+    ctx.shadowOffsetY = 12;
+  }
+  drawContain(ctx, tempCanvas, -width / 2, -height / 2, width, height);
+  ctx.restore();
 }
 
 function roundedRectPath(ctx, x, y, width, height, radius) {
@@ -549,15 +607,89 @@ function drawCuteDecor(ctx, width, height) {
   ctx.restore();
 }
 
+function drawGear(ctx, x, y, radius, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = color;
+  for (let i = 0; i < 10; i += 1) {
+    ctx.rotate(Math.PI / 5);
+    ctx.fillRect(radius * 0.72, -radius * 0.12, radius * 0.28, radius * 0.24);
+  }
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.48, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawDiamond(ctx, x, y, size, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(Math.PI / 4);
+  ctx.fillStyle = color;
+  ctx.fillRect(-size / 2, -size / 2, size, size);
+  ctx.restore();
+}
+
+function drawMangomiConfetti(ctx, width, height) {
+  const colors = ["#ff9f00", "#ff5c8a", "#5bbd5b", "#4b79c7", "#ffd91f", "#b77ad9"];
+  for (let i = 0; i < 44; i += 1) {
+    const sideX = i % 2 === 0 ? 70 + (i % 3) * 18 : width - 90 - (i % 3) * 18;
+    const y = 120 + i * 76;
+    if (i % 3 === 0) drawDiamond(ctx, sideX, y, 18, colors[i % colors.length]);
+    else drawStar(ctx, sideX, y, 13, colors[i % colors.length]);
+  }
+}
+
+function drawMangomiFrameBackground(ctx, width, height, assets) {
+  const bg = ctx.createLinearGradient(0, 0, width, height);
+  bg.addColorStop(0, "#fffdf3");
+  bg.addColorStop(0.54, "#fff8db");
+  bg.addColorStop(1, "#fff2be");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.save();
+  ctx.strokeStyle = "#ff9f00";
+  ctx.lineWidth = 11;
+  roundedRectPath(ctx, 42, 42, width - 84, height - 84, 34);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(255,159,0,.35)";
+  ctx.lineWidth = 3;
+  roundedRectPath(ctx, 76, 78, width - 152, height - 156, 26);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  const gearPoints = [
+    [180, 260, 54], [1010, 470, 48], [105, 930, 44], [1040, 1380, 58],
+    [160, 2110, 48], [1010, 2540, 46], [710, 3230, 68],
+  ];
+  gearPoints.forEach(([x, y, r], index) => drawGear(ctx, x, y, r, index % 2 ? "#ffbd45" : "#ffd875"));
+  ctx.restore();
+
+  drawMangomiConfetti(ctx, width, height);
+
+  drawSticker(ctx, assets.faceHappy, -8, 92, 245, 245, -0.18);
+  drawSticker(ctx, assets.faceHeart, width - 250, 126, 220, 220, 0.16);
+  drawSticker(ctx, assets.bodyBasic, width - 288, 1050, 285, 415, 0.1);
+  drawSticker(ctx, assets.faceWink, -10, 1810, 250, 250, -0.18);
+  drawSticker(ctx, assets.bodyParty, width - 330, 2515, 320, 460, 0.08);
+}
+
 function getFrameLayout(frameId, width) {
   if (frameId === "mangomi") {
     return {
-      photoX: 120,
-      photoWidth: width - 240,
-      photoHeight: 670,
-      gap: 50,
-      firstY: 250,
-      radius: 22,
+      photoX: 165,
+      photoWidth: width - 330,
+      photoHeight: 640,
+      gap: 45,
+      firstY: 255,
+      radius: 24,
     };
   }
 
@@ -571,14 +703,9 @@ function getFrameLayout(frameId, width) {
   };
 }
 
-function drawFrameBackground(ctx, width, height, theme, mangomiImage) {
-  if (state.frameTheme === "mangomi" && mangomiImage) {
-    drawCover(ctx, mangomiImage, 0, 0, width, height);
-    ctx.save();
-    ctx.globalAlpha = 0.18;
-    ctx.fillStyle = "#fff7df";
-    ctx.fillRect(0, 0, width, height);
-    ctx.restore();
+function drawFrameBackground(ctx, width, height, theme, mangomiAssets) {
+  if (state.frameTheme === "mangomi" && mangomiAssets) {
+    drawMangomiFrameBackground(ctx, width, height, mangomiAssets);
     return;
   }
 
@@ -617,6 +744,8 @@ function drawSlotFrame(ctx, x, y, width, height, radius, theme) {
 }
 
 function drawFrameFooter(ctx, width, footerY, photoX, theme) {
+  if (state.frameTheme === "mangomi") return;
+
   ctx.textAlign = "center";
   ctx.fillStyle = theme.text;
   ctx.font = '800 60px Inter, "Malgun Gothic", Arial, sans-serif';
@@ -652,6 +781,20 @@ function drawFrameFooter(ctx, width, footerY, photoX, theme) {
   ctx.textAlign = "left";
 }
 
+function drawMangomiFooter(ctx, width, footerY, assets) {
+  ctx.save();
+  ctx.globalAlpha = 0.92;
+  ctx.strokeStyle = "rgba(255,159,0,.34)";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(180, footerY + 60);
+  ctx.lineTo(width - 180, footerY + 60);
+  ctx.stroke();
+  ctx.restore();
+
+  drawSticker(ctx, assets.logo, width / 2 - 245, footerY + 106, 490, 190, 0, false);
+}
+
 async function renderFramePreview() {
   if (state.selectedIds.length !== 4) return;
 
@@ -661,7 +804,7 @@ async function renderFramePreview() {
   if (selectedPhotos.some((photo) => !photo)) return;
 
   const images = await Promise.all(selectedPhotos.map((photo) => loadImage(photo.src)));
-  const mangomiImage = state.frameTheme === "mangomi" ? await loadMangomiFrame() : null;
+  const mangomiAssets = state.frameTheme === "mangomi" ? await loadMangomiAssets() : null;
   const ctx = resultCanvas.getContext("2d");
   const width = resultCanvas.width;
   const height = resultCanvas.height;
@@ -669,7 +812,7 @@ async function renderFramePreview() {
   const { photoX, photoWidth, photoHeight, gap, firstY, radius } = getFrameLayout(state.frameTheme, width);
 
   ctx.clearRect(0, 0, width, height);
-  drawFrameBackground(ctx, width, height, theme, mangomiImage);
+  drawFrameBackground(ctx, width, height, theme, mangomiAssets);
 
   images.forEach((image, index) => {
     const y = firstY + index * (photoHeight + gap);
@@ -679,6 +822,9 @@ async function renderFramePreview() {
 
   const footerY = firstY + 4 * (photoHeight + gap) + 20;
   drawFrameFooter(ctx, width, footerY, photoX, theme);
+  if (state.frameTheme === "mangomi" && mangomiAssets) {
+    drawMangomiFooter(ctx, width, footerY, mangomiAssets);
+  }
 }
 
 async function composeStrip() {
