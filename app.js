@@ -745,41 +745,40 @@ function drawSlotFrame(ctx, x, y, width, height, radius, theme) {
   ctx.restore();
 }
 
-function drawFrameFooter(ctx, width, footerY, photoX, theme) {
+function drawFrameFooter(ctx, width, height, footerY, photoX, theme) {
   if (state.frameTheme === "mangomi") return;
+
+  const footerCenterY = (footerY + height) / 2 - 18;
+  const bottomTitleY = height - 118;
+  const bottomDateY = height - 68;
 
   ctx.textAlign = "center";
   ctx.fillStyle = theme.text;
   ctx.font = '800 66px Inter, "Malgun Gothic", Arial, sans-serif';
-  ctx.fillText("나를 찾다, 미래를 열다!", width / 2, footerY + 54);
+  ctx.fillText("나를 찾다, 미래를 열다!", width / 2, footerCenterY - 36);
 
   ctx.fillStyle = theme.muted;
   ctx.font = '600 30px Inter, "Malgun Gothic", Arial, sans-serif';
-  ctx.fillText("2026서울진로직업박람회 X 망우청소년센터", width / 2, footerY + 110);
+  ctx.fillText("2026 진로직업박람회 X 망우청소년센터", width / 2, footerCenterY + 22);
 
   ctx.strokeStyle = theme.line;
   ctx.globalAlpha = state.frameTheme === "black" || state.frameTheme === "film" ? 0.7 : 1;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(photoX, footerY + 154);
-  ctx.lineTo(width - photoX, footerY + 154);
+  ctx.moveTo(photoX, height - 172);
+  ctx.lineTo(width - photoX, height - 172);
   ctx.stroke();
   ctx.globalAlpha = 1;
 
   ctx.textAlign = "left";
   ctx.fillStyle = theme.text;
   ctx.font = '800 48px Inter, Arial, sans-serif';
-  ctx.fillText("MANGWOO FOUR CUTS", photoX, footerY + 226);
+  ctx.fillText("MANGWOO FOUR CUTS", photoX, bottomTitleY);
 
   const date = new Intl.DateTimeFormat("en-CA").format(new Date()).replaceAll("-", "  ·  ");
   ctx.fillStyle = theme.muted;
   ctx.font = '500 26px Inter, Arial, sans-serif';
-  ctx.fillText(date, photoX, footerY + 286);
-
-  ctx.textAlign = "right";
-  ctx.fillStyle = theme.accent;
-  ctx.font = 'italic 700 34px Georgia, "Times New Roman", serif';
-  ctx.fillText("Mangwoo Youth Center", width - photoX, footerY + 242);
+  ctx.fillText(date, photoX, bottomDateY);
   ctx.textAlign = "left";
 }
 
@@ -831,7 +830,7 @@ async function renderFramePreview() {
 
   const lastPhotoBottom = firstY + 4 * photoHeight + 3 * gap;
   const footerY = lastPhotoBottom + 20;
-  drawFrameFooter(ctx, width, footerY, photoX, theme);
+  drawFrameFooter(ctx, width, height, footerY, photoX, theme);
   if (state.frameTheme === "mangomi" && mangomiAssets) {
     drawMangomiOverlay(ctx, width, height, mangomiAssets);
     drawMangomiFooter(ctx, width, height, lastPhotoBottom, mangomiAssets);
