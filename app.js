@@ -783,18 +783,25 @@ function drawFrameFooter(ctx, width, footerY, photoX, theme) {
   ctx.textAlign = "left";
 }
 
-function drawMangomiFooter(ctx, width, footerY, assets) {
+function drawMangomiFooter(ctx, width, height, lastPhotoBottom, assets) {
+  const logoWidth = 880;
+  const logoHeight = 342;
+  const logoX = (width - logoWidth) / 2;
+  const logoCenterY = (lastPhotoBottom + height) / 2;
+  const logoY = logoCenterY - logoHeight / 2;
+  const dividerY = Math.max(lastPhotoBottom + 32, logoY - 24);
+
   ctx.save();
   ctx.globalAlpha = 0.92;
   ctx.strokeStyle = "rgba(255,159,0,.34)";
   ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.moveTo(160, footerY + 34);
-  ctx.lineTo(width - 160, footerY + 34);
+  ctx.moveTo(160, dividerY);
+  ctx.lineTo(width - 160, dividerY);
   ctx.stroke();
   ctx.restore();
 
-  drawSticker(ctx, assets.logo, 12, footerY + 42, 1080, 420, 0, false);
+  drawSticker(ctx, assets.logo, logoX, logoY, logoWidth, logoHeight, 0, false);
 }
 
 async function renderFramePreview() {
@@ -822,11 +829,12 @@ async function renderFramePreview() {
     drawFilteredCover(ctx, image, photoX, y, photoWidth, photoHeight, radius);
   });
 
-  const footerY = firstY + 4 * (photoHeight + gap) + 20;
+  const lastPhotoBottom = firstY + 4 * photoHeight + 3 * gap;
+  const footerY = lastPhotoBottom + 20;
   drawFrameFooter(ctx, width, footerY, photoX, theme);
   if (state.frameTheme === "mangomi" && mangomiAssets) {
     drawMangomiOverlay(ctx, width, height, mangomiAssets);
-    drawMangomiFooter(ctx, width, footerY, mangomiAssets);
+    drawMangomiFooter(ctx, width, height, lastPhotoBottom, mangomiAssets);
   }
 }
 
