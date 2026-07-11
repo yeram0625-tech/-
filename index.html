@@ -57,7 +57,7 @@
             <h2>예람의 네컷을 시작해요.</h2>
           </div>
           <div class="steps" aria-label="진행 단계">
-            <span class="active">촬영</span><i></i><span>선택</span><i></i><span>완성</span>
+            <span class="active">촬영</span><i></i><span>선택</span><i></i><span>프레임</span>
           </div>
         </div>
 
@@ -87,34 +87,33 @@
                 <span>↻</span> 전환
               </button>
             </div>
-            <p class="camera-hint">촬영 버튼을 누르면 3초 후 사진이 찍혀요</p>
+            <p class="camera-hint">촬영 버튼을 누르면 3초 간격으로 총 8장이 연속 촬영돼요</p>
           </section>
+        </div>
+      </section>
 
-          <aside class="selection-panel">
+      <section class="select" id="select" hidden>
+        <div class="section-heading">
+          <div>
+            <span class="pill">STEP 02</span>
+            <h2>8장 중 마음에 드는<br />4장을 골라주세요.</h2>
+          </div>
+          <div class="steps" aria-label="진행 단계">
+            <span>촬영</span><i></i><span class="active">선택</span><i></i><span>프레임</span>
+          </div>
+        </div>
+
+        <div class="select-workspace">
+          <aside class="selection-panel selection-panel-wide">
             <div class="selection-header">
               <div>
-                <span class="pill">STEP 02</span>
-                <h3>마음에 드는<br />네 장을 골라주세요.</h3>
+                <span class="pill">PHOTO PICK</span>
+                <h3>네컷에 들어갈 사진과<br />보정 필터를 정해요.</h3>
               </div>
               <div class="selection-count"><b id="selectedCount">0</b><span>/ 4</span></div>
             </div>
 
             <div class="photo-grid" id="photoGrid"></div>
-
-            <div class="frame-panel" aria-label="네컷 프레임 선택">
-              <div>
-                <span class="frame-label">FRAME</span>
-                <p>완성 이미지에 사용할 프레임을 골라주세요.</p>
-              </div>
-              <div class="frame-options">
-                <button class="frame-option active" type="button" data-frame="black">블랙</button>
-                <button class="frame-option" type="button" data-frame="white">화이트</button>
-                <button class="frame-option" type="button" data-frame="heart">하트</button>
-                <button class="frame-option" type="button" data-frame="film">필름지</button>
-                <button class="frame-option" type="button" data-frame="cute">뽀짝</button>
-                <button class="frame-option" type="button" data-frame="mangomi">망고미</button>
-              </div>
-            </div>
 
             <div class="beauty-panel" aria-label="사진 보정 선택">
               <div>
@@ -133,7 +132,7 @@
             <div class="selection-actions">
               <button class="delete-button" id="deleteButton" type="button" disabled>선택 삭제</button>
               <button class="primary-button compose-button" id="composeButton" type="button" disabled>
-                네컷 완성하기 <span>→</span>
+                프레임 고르기 <span>→</span>
               </button>
             </div>
           </aside>
@@ -142,12 +141,26 @@
 
       <section class="result" id="result" hidden>
         <div class="result-copy">
-          <span class="pill">MADE BY YERAM</span>
-          <h2>세상에 하나뿐인<br />네컷이 완성됐어요.</h2>
-          <p>선택한 프레임과 보정으로 완성한 순간.<br />저장하면 같은 프레임 두 장이 나란히 만들어져요.</p>
+          <span class="pill">STEP 03</span>
+          <h2>프레임을 고르고<br />완성본을 확인해요.</h2>
+          <p>프레임을 바꾸면 미리보기가 바로 다시 합성돼요.<br />저장하면 같은 프레임 두 장이 나란히 만들어져요.</p>
+          <div class="frame-panel" aria-label="네컷 프레임 선택">
+            <div>
+              <span class="frame-label">FRAME</span>
+              <p>완성 이미지에 사용할 프레임을 골라주세요.</p>
+            </div>
+            <div class="frame-options">
+              <button class="frame-option active" type="button" data-frame="black">블랙</button>
+              <button class="frame-option" type="button" data-frame="white">화이트</button>
+              <button class="frame-option" type="button" data-frame="heart">하트</button>
+              <button class="frame-option" type="button" data-frame="film">필름지</button>
+              <button class="frame-option" type="button" data-frame="cute">뽀짝</button>
+              <button class="frame-option" type="button" data-frame="mangomi">망고미</button>
+            </div>
+          </div>
           <div class="result-actions">
             <button class="primary-button" id="saveButton" type="button">이미지 저장 <span>↓</span></button>
-            <button class="control-button" id="backButton" type="button">다시 고르기</button>
+            <button class="control-button" id="backButton" type="button">사진 다시 고르기</button>
           </div>
         </div>
         <div class="result-preview">

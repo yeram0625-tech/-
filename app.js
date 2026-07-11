@@ -4,6 +4,7 @@ const state = {
   photos: [],
   selectedIds: [],
   isCountingDown: false,
+  isCapturingBatch: false,
   beautyFilter: "bright",
   frameTheme: "black",
 };
@@ -103,6 +104,7 @@ const FRAME_THEMES = {
 const $ = (selector) => document.querySelector(selector);
 const intro = $("#intro");
 const booth = $("#booth");
+const select = $("#select");
 const result = $("#result");
 const video = $("#video");
 const placeholder = $("#cameraPlaceholder");
@@ -138,6 +140,7 @@ function showToast(message) {
 function setScreen(screen) {
   intro.hidden = screen !== "intro";
   booth.hidden = screen !== "booth";
+  select.hidden = screen !== "select";
   result.hidden = screen !== "result";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -194,24 +197,43 @@ async function beginBooth() {
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function runCountdown() {
-  if (state.isCountingDown || !state.stream) {
+  if (state.isCountingDown || state.isCapturingBatch || !state.stream) {
     if (!state.stream) showToast("사진 추가 버튼으로도 시작할 수 있어요");
     return;
   }
 
+  state.isCapturingBatch = true;
   state.isCountingDown = true;
   captureButton.disabled = true;
-  for (const number of [3, 2, 1]) {
-    countdown.textContent = number;
-    await wait(900);
+  switchButton.disabled = true;
+  state.photos = [];
+  state.selectedIds = [];
+  renderPhotos();
+
+  for (let shot = 1; shot <= 8; shot += 1) {
+    for (const number of [3, 2, 1]) {
+      countdown.innerHTML = `<small>${shot} / 8</small>${number}`;
+      await wait(950);
+    }
+    countdown.textContent = "";
+    takePhoto({ silent: true, append: true });
+    showToast(`${shot}번째 사진을 찍었어요`);
+    if (shot < 8) await wait(120);
   }
+
   countdown.textContent = "";
-  takePhoto();
   state.isCountingDown = false;
+  state.isCapturingBatch = false;
   captureButton.disabled = false;
+  switchButton.disabled = false;
+  stopCamera();
+  state.selectedIds = [];
+  renderPhotos();
+  setScreen("select");
+  showToast("8장 촬영 완료! 마음에 드는 4장을 골라주세요");
 }
 
-function takePhoto() {
+function takePhoto(options = {}) {
   const width = video.videoWidth || 1280;
   const height = video.videoHeight || 960;
   captureCanvas.width = width;
@@ -227,17 +249,17 @@ function takePhoto() {
   flash.classList.remove("fire");
   void flash.offsetWidth;
   flash.classList.add("fire");
-  addPhoto(captureCanvas.toDataURL("image/jpeg", 0.92));
-  showToast("찰칵! 사진이 추가됐어요");
+  addPhoto(captureCanvas.toDataURL("image/jpeg", 0.92), options);
+  if (!options.silent) showToast("찰칵! 사진이 추가됐어요");
 }
 
-function addPhoto(src) {
+function addPhoto(src, options = {}) {
   const photo = {
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
     src,
   };
-  state.photos.unshift(photo);
-  if (state.selectedIds.length < 4) state.selectedIds.push(photo.id);
+  if (options.append) state.photos.push(photo);
+  else state.photos.unshift(photo);
   renderPhotos();
 }
 
@@ -306,6 +328,9 @@ function setFrameTheme(frameId) {
     button.setAttribute("aria-pressed", String(isActive));
   });
   showToast(`${FRAME_THEMES[frameId].label} 프레임을 선택했어요`);
+  if (!result.hidden && state.selectedIds.length === 4) {
+    renderFramePreview();
+  }
 }
 
 function deleteSelected() {
@@ -321,10 +346,14 @@ async function addFiles(files) {
   if (!images.length) return;
 
   for (const file of images) {
-    addPhoto(await fileToDataUrl(file));
+    addPhoto(await fileToDataUrl(file), { append: true });
   }
   fileInput.value = "";
-  showToast(`${images.length}장의 사진을 추가했어요`);
+  state.selectedIds = [];
+  renderPhotos();
+  stopCamera();
+  setScreen("select");
+  showToast(`${images.length}장의 사진을 추가했어요. 네 장을 골라주세요`);
 }
 
 function fileToDataUrl(file) {
@@ -623,16 +652,14 @@ function drawFrameFooter(ctx, width, footerY, photoX, theme) {
   ctx.textAlign = "left";
 }
 
-async function composeStrip() {
+async function renderFramePreview() {
   if (state.selectedIds.length !== 4) return;
-
-  composeButton.disabled = true;
-  const originalLabel = composeButton.innerHTML;
-  composeButton.textContent = "만드는 중...";
 
   const selectedPhotos = state.selectedIds.map((id) =>
     state.photos.find((photo) => photo.id === id),
   );
+  if (selectedPhotos.some((photo) => !photo)) return;
+
   const images = await Promise.all(selectedPhotos.map((photo) => loadImage(photo.src)));
   const mangomiImage = state.frameTheme === "mangomi" ? await loadMangomiFrame() : null;
   const ctx = resultCanvas.getContext("2d");
@@ -652,11 +679,20 @@ async function composeStrip() {
 
   const footerY = firstY + 4 * (photoHeight + gap) + 20;
   drawFrameFooter(ctx, width, footerY, photoX, theme);
+}
+
+async function composeStrip() {
+  if (state.selectedIds.length !== 4) return;
+
+  composeButton.disabled = true;
+  const originalLabel = composeButton.innerHTML;
+  composeButton.textContent = "미리보기 만드는 중...";
+
+  setScreen("result");
+  await renderFramePreview();
 
   composeButton.innerHTML = originalLabel;
   composeButton.disabled = false;
-  stopCamera();
-  setScreen("result");
 }
 
 function saveImage() {
@@ -686,6 +722,8 @@ function resetApp() {
   state.photos = [];
   state.selectedIds = [];
   state.isCountingDown = false;
+  state.isCapturingBatch = false;
+  countdown.textContent = "";
   renderPhotos();
   setScreen("intro");
 }
@@ -705,10 +743,7 @@ beautyButtons.forEach((button) => {
   button.setAttribute("aria-pressed", String(button.dataset.filter === state.beautyFilter));
 });
 $("#saveButton").addEventListener("click", saveImage);
-$("#backButton").addEventListener("click", async () => {
-  setScreen("booth");
-  await startCamera();
-});
+$("#backButton").addEventListener("click", () => setScreen("select"));
 document.querySelector('[data-action="reset"]').addEventListener("click", resetApp);
 window.addEventListener("beforeunload", stopCamera);
 

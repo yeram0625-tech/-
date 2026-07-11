@@ -371,7 +371,8 @@ h1 {
   text-transform: uppercase;
 }
 
-.booth {
+.booth,
+.select {
   width: min(1460px, 100%);
   min-height: calc(100vh - 76px);
   margin: auto;
@@ -420,6 +421,17 @@ h1 {
   overflow: hidden;
   background: var(--surface);
   box-shadow: 0 18px 60px rgba(26, 26, 24, .07);
+}
+
+.booth .workspace {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  grid-template-columns: 1fr;
+}
+
+.select-workspace {
+  width: min(1120px, 100%);
+  margin: 0 auto;
 }
 
 .camera-panel {
@@ -500,14 +512,24 @@ h1 {
 .countdown {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
   color: white;
   background: rgba(0,0,0,.16);
   font-size: clamp(110px, 15vw, 210px);
   font-weight: 800;
   letter-spacing: -.08em;
   text-shadow: 7px 7px 0 var(--pink);
+}
+
+.countdown small {
+  margin-bottom: 4px;
+  color: rgba(255,255,255,.88);
+  font-size: clamp(18px, 2vw, 28px);
+  letter-spacing: .04em;
+  text-shadow: none;
 }
 
 .countdown:empty {
@@ -615,6 +637,13 @@ h1 {
   flex-direction: column;
 }
 
+.selection-panel-wide {
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: var(--surface);
+  box-shadow: 0 18px 60px rgba(26, 26, 24, .07);
+}
+
 .selection-header {
   display: flex;
   justify-content: space-between;
@@ -651,6 +680,10 @@ h1 {
   grid-template-columns: repeat(2, 1fr);
   align-content: start;
   gap: 12px;
+}
+
+.selection-panel-wide .photo-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .empty-library {
@@ -1008,7 +1041,8 @@ h1 {
     right: -10px;
   }
 
-  .booth {
+  .booth,
+  .select {
     padding: 36px 14px 50px;
   }
 
@@ -1050,6 +1084,10 @@ h1 {
   .selection-panel {
     min-height: 570px;
     padding: 28px 18px;
+  }
+
+  .selection-panel-wide .photo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .selection-actions {
