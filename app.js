@@ -4,6 +4,35 @@ const state = {
   photos: [],
   selectedIds: [],
   isCountingDown: false,
+  beautyFilter: "bright",
+};
+
+const BEAUTY_FILTERS = {
+  original: {
+    label: "원본",
+    css: "none",
+    canvas: "none",
+  },
+  bright: {
+    label: "화사하게",
+    css: "brightness(1.09) contrast(1.04) saturate(1.08)",
+    canvas: "brightness(1.09) contrast(1.04) saturate(1.08)",
+  },
+  soft: {
+    label: "뽀샤시",
+    css: "brightness(1.13) contrast(.96) saturate(1.04)",
+    canvas: "brightness(1.13) contrast(.96) saturate(1.04) blur(.35px)",
+  },
+  clear: {
+    label: "선명하게",
+    css: "brightness(1.04) contrast(1.15) saturate(1.12)",
+    canvas: "brightness(1.04) contrast(1.15) saturate(1.12)",
+  },
+  warm: {
+    label: "필름톤",
+    css: "brightness(1.06) contrast(1.03) saturate(1.12) sepia(.16)",
+    canvas: "brightness(1.06) contrast(1.03) saturate(1.12) sepia(.16)",
+  },
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -24,6 +53,7 @@ const captureButton = $("#captureButton");
 const switchButton = $("#switchButton");
 const fileInput = $("#fileInput");
 const toast = $("#toast");
+const beautyButtons = [...document.querySelectorAll("[data-filter]")];
 
 $("#sampleDate").textContent = new Intl.DateTimeFormat("ko-KR", {
   year: "numeric",
@@ -158,6 +188,7 @@ function toggleSelection(id) {
 
 function renderPhotos() {
   photoGrid.innerHTML = "";
+  const beauty = BEAUTY_FILTERS[state.beautyFilter] || BEAUTY_FILTERS.original;
 
   if (!state.photos.length) {
     photoGrid.innerHTML = `
@@ -174,7 +205,7 @@ function renderPhotos() {
       card.type = "button";
       card.setAttribute("aria-label", index >= 0 ? `선택된 사진 ${index + 1}번` : "사진 선택");
       card.innerHTML = `
-        <img src="${photo.src}" alt="촬영한 사진" />
+        <img src="${photo.src}" alt="촬영한 사진" style="filter: ${beauty.css}" />
         <span class="photo-order">${index + 1}</span>
       `;
       card.addEventListener("click", () => toggleSelection(photo.id));
@@ -185,6 +216,18 @@ function renderPhotos() {
   selectedCount.textContent = state.selectedIds.length;
   deleteButton.disabled = state.selectedIds.length === 0;
   composeButton.disabled = state.selectedIds.length !== 4;
+}
+
+function setBeautyFilter(filterId) {
+  if (!BEAUTY_FILTERS[filterId]) return;
+  state.beautyFilter = filterId;
+  beautyButtons.forEach((button) => {
+    const isActive = button.dataset.filter === filterId;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+  renderPhotos();
+  showToast(`${BEAUTY_FILTERS[filterId].label} 보정을 적용했어요`);
 }
 
 function deleteSelected() {
@@ -241,6 +284,32 @@ function drawCover(ctx, image, x, y, width, height) {
   }
 
   ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
+}
+
+function drawFilteredCover(ctx, image, x, y, width, height) {
+  const beauty = BEAUTY_FILTERS[state.beautyFilter] || BEAUTY_FILTERS.original;
+  ctx.save();
+  ctx.filter = beauty.canvas;
+  drawCover(ctx, image, x, y, width, height);
+  ctx.restore();
+
+  if (state.beautyFilter === "soft") {
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = "#ffe7ef";
+    ctx.fillRect(x, y, width, height);
+    ctx.restore();
+  }
+
+  if (state.beautyFilter === "warm") {
+    ctx.save();
+    ctx.globalCompositeOperation = "soft-light";
+    ctx.globalAlpha = 0.14;
+    ctx.fillStyle = "#ffd6a8";
+    ctx.fillRect(x, y, width, height);
+    ctx.restore();
+  }
 }
 
 function drawHeart(ctx, x, y, size, filled = true) {
@@ -307,7 +376,7 @@ async function composeStrip() {
     const y = firstY + index * (photoHeight + gap);
     ctx.fillStyle = "#f0f0ee";
     ctx.fillRect(photoX, y, photoWidth, photoHeight);
-    drawCover(ctx, image, photoX, y, photoWidth, photoHeight);
+    drawFilteredCover(ctx, image, photoX, y, photoWidth, photoHeight);
   });
 
   const footerY = firstY + 4 * (photoHeight + gap) + 20;
@@ -386,6 +455,10 @@ switchButton.addEventListener("click", switchCamera);
 fileInput.addEventListener("change", (event) => addFiles(event.target.files));
 deleteButton.addEventListener("click", deleteSelected);
 composeButton.addEventListener("click", composeStrip);
+beautyButtons.forEach((button) => {
+  button.addEventListener("click", () => setBeautyFilter(button.dataset.filter));
+  button.setAttribute("aria-pressed", String(button.dataset.filter === state.beautyFilter));
+});
 $("#saveButton").addEventListener("click", saveImage);
 $("#backButton").addEventListener("click", async () => {
   setScreen("booth");
