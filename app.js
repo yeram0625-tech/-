@@ -9,6 +9,8 @@ const state = {
   frameTheme: "black",
 };
 
+const CAPTURE_COUNT = 6;
+
 const BEAUTY_FILTERS = {
   original: {
     label: "원본",
@@ -219,15 +221,15 @@ async function runCountdown() {
   state.selectedIds = [];
   renderPhotos();
 
-  for (let shot = 1; shot <= 8; shot += 1) {
+  for (let shot = 1; shot <= CAPTURE_COUNT; shot += 1) {
     for (const number of [5, 4, 3, 2, 1]) {
-      countdown.innerHTML = `<small>${shot} / 8</small>${number}`;
+      countdown.innerHTML = `<small>${shot} / ${CAPTURE_COUNT}</small>${number}`;
       await wait(950);
     }
     countdown.textContent = "";
     takePhoto({ silent: true, append: true });
     showToast(`${shot}번째 사진을 찍었어요`);
-    if (shot < 8) await wait(120);
+    if (shot < CAPTURE_COUNT) await wait(120);
   }
 
   countdown.textContent = "";
@@ -239,7 +241,7 @@ async function runCountdown() {
   state.selectedIds = [];
   renderPhotos();
   setScreen("select");
-  showToast("8장 촬영 완료! 마음에 드는 4장을 골라주세요");
+  showToast(`${CAPTURE_COUNT}장 촬영 완료! 마음에 드는 4장을 골라주세요`);
 }
 
 function takePhoto(options = {}) {
