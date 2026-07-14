@@ -5,38 +5,14 @@ const state = {
   selectedIds: [],
   isCountingDown: false,
   isCapturingBatch: false,
-  beautyFilter: "bright",
   frameTheme: "black",
 };
 
 const CAPTURE_COUNT = 6;
 
-const BEAUTY_FILTERS = {
-  original: {
-    label: "원본",
-    css: "none",
-    canvas: "none",
-  },
-  bright: {
-    label: "화사하게",
-    css: "brightness(1.24) contrast(1.08) saturate(1.22)",
-    canvas: "brightness(1.24) contrast(1.08) saturate(1.22)",
-  },
-  soft: {
-    label: "뽀샤시",
-    css: "brightness(1.28) contrast(.88) saturate(1.14)",
-    canvas: "brightness(1.28) contrast(.88) saturate(1.14) blur(.85px)",
-  },
-  clear: {
-    label: "선명하게",
-    css: "brightness(1.08) contrast(1.34) saturate(1.32)",
-    canvas: "brightness(1.08) contrast(1.34) saturate(1.32)",
-  },
-  warm: {
-    label: "필름톤",
-    css: "brightness(1.14) contrast(1.1) saturate(1.28) sepia(.34)",
-    canvas: "brightness(1.14) contrast(1.1) saturate(1.28) sepia(.34)",
-  },
+const BEAUTY_FILTER = {
+  css: "brightness(1.24) contrast(1.08) saturate(1.22)",
+  canvas: "brightness(1.24) contrast(1.08) saturate(1.22)",
 };
 
 const FRAME_THEMES = {
@@ -132,7 +108,6 @@ const switchButton = $("#switchButton");
 const fileInput = $("#fileInput");
 const toast = $("#toast");
 const frameButtons = [...document.querySelectorAll("[data-frame]")];
-const beautyButtons = [...document.querySelectorAll("[data-filter]")];
 let mangomiAssetsPromise = null;
 
 $("#sampleDate").textContent = new Intl.DateTimeFormat("ko-KR", {
@@ -222,7 +197,7 @@ async function runCountdown() {
   renderPhotos();
 
   for (let shot = 1; shot <= CAPTURE_COUNT; shot += 1) {
-    for (const number of [5, 4, 3, 2, 1]) {
+    for (const number of [3, 2, 1]) {
       countdown.innerHTML = `<small>${shot} / ${CAPTURE_COUNT}</small>${number}`;
       await wait(950);
     }
@@ -288,8 +263,6 @@ function toggleSelection(id) {
 
 function renderPhotos() {
   photoGrid.innerHTML = "";
-  const beauty = BEAUTY_FILTERS[state.beautyFilter] || BEAUTY_FILTERS.original;
-
   if (!state.photos.length) {
     photoGrid.innerHTML = `
       <div class="empty-library">
@@ -305,7 +278,7 @@ function renderPhotos() {
       card.type = "button";
       card.setAttribute("aria-label", index >= 0 ? `선택된 사진 ${index + 1}번` : "사진 선택");
       card.innerHTML = `
-        <img src="${photo.src}" alt="촬영한 사진" style="filter: ${beauty.css}" />
+        <img src="${photo.src}" alt="촬영한 사진" style="filter: ${BEAUTY_FILTER.css}" />
         <span class="photo-order">${index + 1}</span>
       `;
       card.addEventListener("click", () => toggleSelection(photo.id));
@@ -316,18 +289,6 @@ function renderPhotos() {
   selectedCount.textContent = state.selectedIds.length;
   deleteButton.disabled = state.selectedIds.length === 0;
   composeButton.disabled = state.selectedIds.length !== 4;
-}
-
-function setBeautyFilter(filterId) {
-  if (!BEAUTY_FILTERS[filterId]) return;
-  state.beautyFilter = filterId;
-  beautyButtons.forEach((button) => {
-    const isActive = button.dataset.filter === filterId;
-    button.classList.toggle("active", isActive);
-    button.setAttribute("aria-pressed", String(isActive));
-  });
-  renderPhotos();
-  showToast(`${BEAUTY_FILTERS[filterId].label} 보정을 적용했어요`);
 }
 
 function setFrameTheme(frameId) {
@@ -476,41 +437,14 @@ function roundedRectPath(ctx, x, y, width, height, radius) {
 }
 
 function drawFilteredCover(ctx, image, x, y, width, height, radius = 0) {
-  const beauty = BEAUTY_FILTERS[state.beautyFilter] || BEAUTY_FILTERS.original;
   ctx.save();
   if (radius > 0) {
     roundedRectPath(ctx, x, y, width, height, radius);
     ctx.clip();
   }
-  ctx.filter = beauty.canvas;
+  ctx.filter = BEAUTY_FILTER.canvas;
   drawCover(ctx, image, x, y, width, height);
   ctx.restore();
-
-  if (state.beautyFilter === "soft") {
-    ctx.save();
-    if (radius > 0) {
-      roundedRectPath(ctx, x, y, width, height, radius);
-      ctx.clip();
-    }
-    ctx.globalCompositeOperation = "screen";
-    ctx.globalAlpha = 0.18;
-    ctx.fillStyle = "#ffe7ef";
-    ctx.fillRect(x, y, width, height);
-    ctx.restore();
-  }
-
-  if (state.beautyFilter === "warm") {
-    ctx.save();
-    if (radius > 0) {
-      roundedRectPath(ctx, x, y, width, height, radius);
-      ctx.clip();
-    }
-    ctx.globalCompositeOperation = "soft-light";
-    ctx.globalAlpha = 0.28;
-    ctx.fillStyle = "#ffd6a8";
-    ctx.fillRect(x, y, width, height);
-    ctx.restore();
-  }
 }
 
 function drawHeart(ctx, x, y, size, filled = true) {
@@ -900,10 +834,6 @@ composeButton.addEventListener("click", composeStrip);
 frameButtons.forEach((button) => {
   button.addEventListener("click", () => setFrameTheme(button.dataset.frame));
   button.setAttribute("aria-pressed", String(button.dataset.frame === state.frameTheme));
-});
-beautyButtons.forEach((button) => {
-  button.addEventListener("click", () => setBeautyFilter(button.dataset.filter));
-  button.setAttribute("aria-pressed", String(button.dataset.filter === state.beautyFilter));
 });
 $("#saveButton").addEventListener("click", saveImage);
 $("#backButton").addEventListener("click", () => setScreen("select"));

@@ -80,14 +80,14 @@
                 <input id="fileInput" type="file" accept="image/*" multiple />
                 <span>＋</span> 사진 추가
               </label>
-              <button class="shutter-button" id="captureButton" type="button" aria-label="5초 후 촬영">
+              <button class="shutter-button" id="captureButton" type="button" aria-label="3초 후 촬영">
                 <span></span>
               </button>
               <button class="control-button" id="switchButton" type="button">
                 <span>↻</span> 전환
               </button>
             </div>
-            <p class="camera-hint">촬영 버튼을 누르면 5초 간격으로 총 6장이 연속 촬영돼요</p>
+            <p class="camera-hint">촬영 버튼을 누르면 3초 간격으로 총 6장이 연속 촬영돼요</p>
           </section>
         </div>
       </section>
@@ -108,26 +108,12 @@
             <div class="selection-header">
               <div>
                 <span class="pill">PHOTO PICK</span>
-                <h3>네컷에 들어갈 사진과<br />보정 필터를 정해요.</h3>
+                <h3>네컷에 들어갈 사진을<br />골라주세요.</h3>
               </div>
               <div class="selection-count"><b id="selectedCount">0</b><span>/ 4</span></div>
             </div>
 
             <div class="photo-grid" id="photoGrid"></div>
-
-            <div class="beauty-panel" aria-label="사진 보정 선택">
-              <div>
-                <span class="beauty-label">FACE TONE</span>
-                <p>네컷에 적용할 사진 보정을 골라주세요.</p>
-              </div>
-              <div class="beauty-options">
-                <button class="beauty-option" type="button" data-filter="original">원본</button>
-                <button class="beauty-option active" type="button" data-filter="bright">화사하게</button>
-                <button class="beauty-option" type="button" data-filter="soft">뽀샤시</button>
-                <button class="beauty-option" type="button" data-filter="clear">선명하게</button>
-                <button class="beauty-option" type="button" data-filter="warm">필름톤</button>
-              </div>
-            </div>
 
             <div class="selection-actions">
               <button class="delete-button" id="deleteButton" type="button" disabled>선택 삭제</button>
